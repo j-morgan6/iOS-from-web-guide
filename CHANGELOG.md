@@ -62,11 +62,6 @@ Initial release.
 - `strip-alpha-from-icon.sh` — removes alpha channel from a PNG (ImageMagick primary, `sips` fallback).
 - `validate_pre_archive.sh` — 6-check pre-archive validator (build number, icon alpha, privacy strings, release config, development team, bundle id).
 
-### Installer
+### Distribution
 
-- `install.sh` copies skills/agents/scripts/templates into `~/.claude/`, merges `hooks-settings.json` into `~/.claude/settings.json` via `jq` (Python fallback), backs up existing settings first. `--non-interactive` supported.
-
-### Tests
-
-- 17 fixture-based tests (`tests/run_all.sh`): 4 script tests (detect, strip-alpha, validate, install) + 13 hook tests.
-- End-to-end smoke test (`tests/e2e_smoke_test.sh`): installs into a mock HOME, creates a mock iOS project, exercises detect + H-W-2 blocking + happy-path hooks.
+Distributed as a Claude Code plugin via the `ios-from-web-guide` marketplace. Install with `/plugin marketplace add j-morgan6/ios-from-web-guide` + `/plugin install ios-from-web-guide@ios-from-web-guide`. Skills, agents, and hooks activate automatically.

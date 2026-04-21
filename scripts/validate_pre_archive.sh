@@ -30,7 +30,7 @@ fi
 # Check 3: App icon alpha
 for icon in $(find . -path '*/AppIcon.appiconset/*.png' 2>/dev/null); do
   if sips -g hasAlpha "$icon" 2>/dev/null | grep -q "hasAlpha: yes"; then
-    add_fail "App icon has alpha channel: $icon. Run: bash \$HOME/.claude/scripts/ios-from-web-guide/strip-alpha-from-icon.sh '$icon'"
+    add_fail "App icon has alpha channel: $icon. Run: bash \${CLAUDE_PLUGIN_ROOT}/scripts/strip-alpha-from-icon.sh '$icon'"
   fi
   DIM=$(sips -g pixelWidth -g pixelHeight "$icon" 2>/dev/null | grep -E 'pixel(Width|Height)' | awk '{print $2}' | sort -u)
   # For v1 we only require the 1024 icon to exist; extensive size-matrix validation deferred

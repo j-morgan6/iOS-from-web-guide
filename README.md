@@ -20,33 +20,35 @@ Plus a handful of "one-hour-to-recover" pitfalls: UserDefaults-for-tokens (block
 
 ## Quick start
 
-Install:
+Install via Claude Code's plugin system:
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/j-morgan6/ios-from-web-guide/main/install.sh | bash
+```
+/plugin marketplace add j-morgan6/ios-from-web-guide
+/plugin install ios-from-web-guide@ios-from-web-guide
 ```
 
-Restart Claude Code. Verify:
-
-```bash
-ls ~/.claude/skills | grep ios-
-```
+Restart Claude Code. Skills, agents, and hooks load automatically.
 
 Drop `CLAUDE.md.template` into your iOS project root (it tells Claude which skills to invoke when):
 
 ```bash
-cp <repo>/CLAUDE.md.template ./CLAUDE.md
+cp ~/.claude/plugins/cache/ios-from-web-guide/ios-from-web-guide/*/CLAUDE.md.template ./CLAUDE.md
+```
+
+### Uninstall
+
+```
+/plugin uninstall ios-from-web-guide@ios-from-web-guide
 ```
 
 ## Documentation
 
-- **[INSTALL-HOOKS.md](INSTALL-HOOKS.md)** — install, uninstall, per-hook summary, escape hatch, Xcode build-phase snippet, troubleshooting.
 - **[CHANGELOG.md](CHANGELOG.md)** — release history.
 - **[CLAUDE.md.template](CLAUDE.md.template)** — drop-in project file that tells Claude which skills to invoke on which files.
 
 ## Related plugin
 
-`elixir-phoenix-guide` — the sibling plugin for Elixir/Phoenix backends. Same structural pattern (skills + hooks + agents + install.sh), different domain. You can run both installed simultaneously; they don't share skill namespaces or hook matchers.
+`elixir-phoenix-guide` — the sibling plugin for Elixir/Phoenix backends. Same structural pattern (skills + hooks + agents), different domain. You can run both installed simultaneously; they don't share skill namespaces or hook matchers.
 
 ## Philosophy
 

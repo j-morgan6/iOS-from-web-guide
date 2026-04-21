@@ -50,11 +50,11 @@ sips -g hasAlpha icon-1024.png
 
 ```bash
 # Uses ImageMagick when available, else sips JPEG round-trip
-bash "$HOME/.claude/scripts/ios-from-web-guide/strip-alpha-from-icon.sh" \
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/strip-alpha-from-icon.sh" \
   YourApp/Assets.xcassets/AppIcon.appiconset/icon-1024.png
 
 # Background color override (default: FFFFFF)
-ICON_BG=000000 bash "$HOME/.claude/scripts/ios-from-web-guide/strip-alpha-from-icon.sh" \
+ICON_BG=000000 bash "${CLAUDE_PLUGIN_ROOT}/scripts/strip-alpha-from-icon.sh" \
   path/to/icon.png
 ```
 
@@ -127,7 +127,7 @@ If alpha is detected, the validator fails with exit code 2 and prints the remedi
 ```
 🚫 Pre-archive validation FAILED:
    • App icon has alpha channel: ./YourApp/Assets.xcassets/AppIcon.appiconset/icon-1024.png.
-     Run: bash $HOME/.claude/scripts/ios-from-web-guide/strip-alpha-from-icon.sh '<path>'
+     Run: bash ${CLAUDE_PLUGIN_ROOT}/scripts/strip-alpha-from-icon.sh '<path>'
 ```
 
 The validator runs before `xcodebuild archive`, catching the issue ~90 seconds before the archive step would have discovered it.

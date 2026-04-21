@@ -5,4 +5,4 @@ node_modules/
 .env
 .build-history
 .build/
-tests/fixtures/detect_project/package_swift/.build/
+.ios-from-web-guide-project.json
