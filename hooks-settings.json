@@ -50,6 +50,11 @@
             "type": "command",
             "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; if grep -qE 'URL\\(string:\\s*\"\\/[^h]' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null; then echo '⚠️  URL(string:) with a relative path — this returns nil.' && echo '' && echo '   💡 Fix: Use .asBackendURL on the string. Relative paths resolve to nil in URL(string:).' && echo '' && echo '   See: swiftui-async-image-with-backend-paths skill' && exit 1; fi; exit 0",
             "description": "Warn on URL(string:) with relative path — use .asBackendURL"
+          },
+          {
+            "type": "command",
+            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; COLLAPSED=$(tr '\\n' ' ' < \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null); if echo \"$COLLAPSED\" | grep -qE '@MainActor[^{]*(class|struct|actor)[^{]*\\{[^}]*DispatchQueue\\.main\\.async'; then echo '⚠️  DispatchQueue.main.async inside @MainActor is redundant.' && echo '' && echo '   💡 Fix: Remove it. All methods on @MainActor already run on the main actor.' && exit 1; fi; exit 0",
+            "description": "Warn on DispatchQueue.main.async inside @MainActor class/struct"
           }
         ]
       }
