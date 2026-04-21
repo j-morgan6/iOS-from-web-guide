@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1 — 2026-04-21
+
+### Fixed
+
+All 9 Write|Edit hooks were silent no-ops: they referenced `$CLAUDE_HOOK_FILE_PATH`, an env var Claude Code does not set. The hooks ran but saw empty input and exited 0. Hooks now parse tool input from stdin JSON via a new `scripts/hook-lint.sh` dispatcher, and check the pending `content` / `new_string` rather than a nonexistent file path.
+
+The Bash hooks (force-push and simctl blocks) were also reworked to parse `tool_input.command` properly instead of grepping the raw JSON payload — previously they worked incidentally because the command text appeared in the JSON, but could false-positive on unrelated JSON keys.
+
 ## 1.0.0 — 2026-04-20
 
 Initial release.

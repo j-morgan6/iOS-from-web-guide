@@ -1,6 +1,6 @@
 {
   "name": "ios-from-web-guide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Enforce best practices and prevent common mistakes when adding a native iOS client to an existing web application. SwiftUI, iOS 17+, XcodeGen, App Store pipeline.",
   "author": {
     "name": "Joseph Morgan",

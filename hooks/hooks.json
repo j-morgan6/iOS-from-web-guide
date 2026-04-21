@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "SCRIPTS_DIR=\"${CLAUDE_PLUGIN_ROOT}/scripts\"; if [ -f \"$SCRIPTS_DIR/detect_project.sh\" ]; then bash \"$SCRIPTS_DIR/detect_project.sh\" 2>/dev/null; fi; exit 0",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/detect_project.sh\" 2>/dev/null; exit 0",
             "description": "Detect iOS project and cache metadata for context-aware hooks"
           }
         ]
@@ -18,12 +18,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=$(cat); if echo \"$INPUT\" | grep -qE 'git\\s+push.*(-f|--force).*(main|master)'; then echo '🚫 Dangerous: force push to main/master rewrites shared history. Use --force-with-lease on a feature branch or push to a new branch.' && exit 2; fi; if echo \"$INPUT\" | grep -qE 'xcrun\\s+simctl\\s+erase\\s+all'; then echo '⚠️  xcrun simctl erase all wipes ALL simulator state. Prefer erase <device-id> for a single device.' && exit 1; fi; exit 0",
+            "command": "INPUT=$(cat); CMD=$(printf '%s' \"$INPUT\" | python3 -c 'import json,sys; d=json.loads(sys.stdin.read()); print(d.get(\"tool_input\",{}).get(\"command\",\"\"))' 2>/dev/null); if echo \"$CMD\" | grep -qE 'git[[:space:]]+push.*(-f|--force).*(main|master)'; then echo '🚫 Dangerous: force push to main/master rewrites shared history. Use --force-with-lease on a feature branch or push to a new branch.' && exit 2; fi; if echo \"$CMD\" | grep -qE 'xcrun[[:space:]]+simctl[[:space:]]+erase[[:space:]]+all'; then echo '⚠️  xcrun simctl erase all wipes ALL simulator state. Prefer erase <device-id> for a single device.' && exit 1; fi; exit 0",
             "description": "Block dangerous Bash operations (force push to main, simctl erase all)"
           },
           {
             "type": "command",
-            "command": "INPUT=$(cat); if echo \"$INPUT\" | grep -qE 'xcodebuild\\s+.*archive'; then SCRIPT=\"${CLAUDE_PLUGIN_ROOT}/scripts/validate_pre_archive.sh\"; if [ -f \"$SCRIPT\" ]; then bash \"$SCRIPT\"; exit $?; fi; fi; exit 0",
+            "command": "INPUT=$(cat); CMD=$(printf '%s' \"$INPUT\" | python3 -c 'import json,sys; d=json.loads(sys.stdin.read()); print(d.get(\"tool_input\",{}).get(\"command\",\"\"))' 2>/dev/null); if echo \"$CMD\" | grep -qE 'xcodebuild[[:space:]]+.*archive'; then bash \"${CLAUDE_PLUGIN_ROOT}/scripts/validate_pre_archive.sh\"; exit $?; fi; exit 0",
             "description": "Pre-archive validator — runs validate_pre_archive.sh before xcodebuild archive"
           }
         ]
@@ -33,42 +33,42 @@
         "hooks": [
           {
             "type": "command",
-            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; CACHE=\"$(pwd)/.ios-from-web-guide-project.json\"; if [ \"$EXT\" = \"swift\" ] || [ \"$EXT\" = \"plist\" ] || [ \"$(basename \"$CLAUDE_HOOK_FILE_PATH\")\" = \"project.yml\" ]; then if [ -f \"$CACHE\" ]; then IS_IOS=$(grep -o '\"is_ios_project\":\\s*[a-z]*' \"$CACHE\" | grep -o '[a-z]*$'); [ \"$IS_IOS\" = \"false\" ] && exit 0; fi; echo '💡 Reminder: Did you invoke the relevant ios-from-web-guide skill before writing this file? If not, invoke it now and verify your code follows the rules.'; fi; exit 0",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" skill-reminder",
             "description": "Remind about skill invocation for iOS files (context-aware)"
           },
           {
             "type": "command",
-            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; if grep -qE 'UserDefaults.*\\b(token|password|secret|api_key|bearer)\\b' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null; then echo '🚫 Storing secrets in UserDefaults detected.' && echo '' && echo '   💡 Fix: Use KeychainService.save(token:) / .getToken() / .deleteToken(). Never UserDefaults for secrets.' && echo '' && echo '   See: ios-auth-keychain-storage skill' && exit 2; fi; exit 0",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" userdefaults-token",
             "description": "Block UserDefaults storage of tokens/passwords/secrets — use Keychain"
           },
           {
             "type": "command",
-            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; if grep -A 20 'NavigationLink(value:' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null | grep -q 'buttonStyle(.plain)'; then echo '🚫 .buttonStyle(.plain) inside NavigationLink detected.' && echo '' && echo '   💡 Fix: Use .buttonStyle(.borderless) inside NavigationLink. .plain only strips styling; .borderless claims tap ownership so the NavigationLink fires correctly.' && echo '' && echo '   See: swiftui-navigation-foundations skill' && exit 2; fi; exit 0",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" navlink-plain",
             "description": "Block .buttonStyle(.plain) inside NavigationLink — use .borderless"
           },
           {
             "type": "command",
-            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; if grep -qE 'URL\\(string:\\s*\"\\/[^h]' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null; then echo '⚠️  URL(string:) with a relative path — this returns nil.' && echo '' && echo '   💡 Fix: Use .asBackendURL on the string. Relative paths resolve to nil in URL(string:).' && echo '' && echo '   See: swiftui-async-image-with-backend-paths skill' && exit 1; fi; exit 0",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" url-relative",
             "description": "Warn on URL(string:) with relative path — use .asBackendURL"
           },
           {
             "type": "command",
-            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; COLLAPSED=$(tr '\\n' ' ' < \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null); if echo \"$COLLAPSED\" | grep -qE '@MainActor[^{]*(class|struct|actor)[^{]*\\{[^}]*DispatchQueue\\.main\\.async'; then echo '⚠️  DispatchQueue.main.async inside @MainActor is redundant.' && echo '' && echo '   💡 Fix: Remove it. All methods on @MainActor already run on the main actor.' && exit 1; fi; exit 0",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" dispatchqueue-mainactor",
             "description": "Warn on DispatchQueue.main.async inside @MainActor class/struct"
           },
           {
             "type": "command",
-            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; CACHE=\"$(pwd)/.ios-from-web-guide-project.json\"; [ -f \"$CACHE\" ] || exit 0; TARGET=$(grep -o '\"deployment_target\":\\s*\"[^\"]*\"' \"$CACHE\" | sed -E 's/.*\"([0-9.]+)\".*/\\1/'); MAJOR=$(echo \"$TARGET\" | cut -d. -f1); [ -z \"$MAJOR\" ] && exit 0; if [ \"$MAJOR\" -lt 17 ] 2>/dev/null; then exit 0; fi; if grep -qE '@Published|@ObservedObject|@StateObject' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null; then echo '⚠️  @Published/@ObservedObject/@StateObject on iOS 17+ — prefer @Observable.' && echo '' && echo '   💡 Fix: Use @Observable (Swift Observation framework). iOS 17+ makes the old ObservableObject pattern obsolete.' && echo '' && echo '   See: swiftui-observable-viewmodel-boilerplate skill' && exit 1; fi; exit 0",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" published-on-ios17",
             "description": "Warn on @Published/@ObservedObject/@StateObject in iOS 17+ Observable projects"
           },
           {
             "type": "command",
-            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; if echo \"$CLAUDE_HOOK_FILE_PATH\" | grep -qE '_test\\.swift$|/Tests/|/SnapshotTests/'; then exit 0; fi; if grep -qE '^\\s*print\\(' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null; then echo '⚠️  print() call outside test files — shouldnt ship.' && echo '' && echo '   💡 Fix: Replace print() with os.Logger for production logging.' && echo '' && echo '     import os' && echo '     let logger = Logger(subsystem: \"com.example.app\", category: \"feature\")' && echo '     logger.info(\"message\")' && exit 1; fi; exit 0",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" print-outside-tests",
             "description": "Warn on print() outside test files — use os.Logger"
           },
           {
             "type": "command",
-            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; COLLAPSED=$(tr '\\n' ' ' < \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null); if echo \"$COLLAPSED\" | grep -qE 'struct\\s+[A-Z][A-Za-z0-9_]*\\s*:[^{]*Hashable'; then BODY=$(echo \"$COLLAPSED\" | grep -oE 'static func ==[^{]*\\{[^}]*\\}' | head -1); if [ -n \"$BODY\" ]; then if echo \"$BODY\" | grep -q 'lhs\\.id\\s*==\\s*rhs\\.id' && ! echo \"$BODY\" | grep -q '&&'; then echo '⚠️  Custom id-only `==` detected on a Hashable struct — this breaks SwiftUI diffing.' && echo '' && echo '   💡 Fix: Remove the custom `==` and let Swift auto-synthesize structural equality:' && echo '' && echo '     struct Post: Hashable { ... }  // no custom == needed' && echo '' && echo '   If you need identity-only equality for navigation routing, wrap the id in a separate Identifiable-only type.' && echo '' && echo '   See: swiftui-equatable-hashable-for-diffing skill' && exit 1; fi; fi; fi; exit 0",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" hashable-id-eq",
             "description": "Warn on custom id-only == on Hashable struct (breaks SwiftUI diffing)"
           }
         ]
@@ -80,7 +80,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; if [ \"$EXT\" != \"swift\" ]; then exit 0; fi; if echo \"$CLAUDE_HOOK_FILE_PATH\" | grep -qE '/Views/'; then echo '💡 Consider running the swiftui-checklist agent on this file to catch common pitfalls (navigation, state, equality, layout).'; fi; exit 0",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" post-write-views",
             "description": "Post-write: suggest dispatching swiftui-checklist agent on Views/ .swift files"
           }
         ]
