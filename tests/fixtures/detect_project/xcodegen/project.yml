@@ -1,0 +1,11 @@
+name: MyApp
+options:
+  deploymentTarget:
+    iOS: "17.0"
+settings:
+  PRODUCT_BUNDLE_IDENTIFIER: com.example.myapp
+  DEVELOPMENT_TEAM: ABC123DEF4
+targets:
+  MyApp:
+    type: application
+    platform: iOS

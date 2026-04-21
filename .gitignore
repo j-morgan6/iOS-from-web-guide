@@ -4,3 +4,5 @@ node_modules/
 *.log
 .env
 .build-history
+.build/
+tests/fixtures/detect_project/package_swift/.build/
