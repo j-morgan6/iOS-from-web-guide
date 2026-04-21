@@ -65,6 +65,11 @@
             "type": "command",
             "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; if echo \"$CLAUDE_HOOK_FILE_PATH\" | grep -qE '_test\\.swift$|/Tests/|/SnapshotTests/'; then exit 0; fi; if grep -qE '^\\s*print\\(' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null; then echo '⚠️  print() call outside test files — shouldnt ship.' && echo '' && echo '   💡 Fix: Replace print() with os.Logger for production logging.' && echo '' && echo '     import os' && echo '     let logger = Logger(subsystem: \"com.example.app\", category: \"feature\")' && echo '     logger.info(\"message\")' && exit 1; fi; exit 0",
             "description": "Warn on print() outside test files — use os.Logger"
+          },
+          {
+            "type": "command",
+            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; COLLAPSED=$(tr '\\n' ' ' < \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null); if echo \"$COLLAPSED\" | grep -qE 'struct\\s+[A-Z][A-Za-z0-9_]*\\s*:[^{]*Hashable'; then BODY=$(echo \"$COLLAPSED\" | grep -oE 'static func ==[^{]*\\{[^}]*\\}' | head -1); if [ -n \"$BODY\" ]; then if echo \"$BODY\" | grep -q 'lhs\\.id\\s*==\\s*rhs\\.id' && ! echo \"$BODY\" | grep -q '&&'; then echo '⚠️  Custom id-only `==` detected on a Hashable struct — this breaks SwiftUI diffing.' && echo '' && echo '   💡 Fix: Remove the custom `==` and let Swift auto-synthesize structural equality:' && echo '' && echo '     struct Post: Hashable { ... }  // no custom == needed' && echo '' && echo '   If you need identity-only equality for navigation routing, wrap the id in a separate Identifiable-only type.' && echo '' && echo '   See: swiftui-equatable-hashable-for-diffing skill' && exit 1; fi; fi; fi; exit 0",
+            "description": "Warn on custom id-only == on Hashable struct (breaks SwiftUI diffing)"
           }
         ]
       }
