@@ -45,6 +45,11 @@
             "type": "command",
             "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; if grep -A 20 'NavigationLink(value:' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null | grep -q 'buttonStyle(.plain)'; then echo '🚫 .buttonStyle(.plain) inside NavigationLink detected.' && echo '' && echo '   💡 Fix: Use .buttonStyle(.borderless) inside NavigationLink. .plain only strips styling; .borderless claims tap ownership so the NavigationLink fires correctly.' && echo '' && echo '   See: swiftui-navigation-foundations skill' && exit 2; fi; exit 0",
             "description": "Block .buttonStyle(.plain) inside NavigationLink — use .borderless"
+          },
+          {
+            "type": "command",
+            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; if grep -qE 'URL\\(string:\\s*\"\\/[^h]' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null; then echo '⚠️  URL(string:) with a relative path — this returns nil.' && echo '' && echo '   💡 Fix: Use .asBackendURL on the string. Relative paths resolve to nil in URL(string:).' && echo '' && echo '   See: swiftui-async-image-with-backend-paths skill' && exit 1; fi; exit 0",
+            "description": "Warn on URL(string:) with relative path — use .asBackendURL"
           }
         ]
       }
