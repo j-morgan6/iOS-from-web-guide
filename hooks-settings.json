@@ -40,6 +40,11 @@
             "type": "command",
             "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; if grep -qE 'UserDefaults.*\\b(token|password|secret|api_key|bearer)\\b' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null; then echo '🚫 Storing secrets in UserDefaults detected.' && echo '' && echo '   💡 Fix: Use KeychainService.save(token:) / .getToken() / .deleteToken(). Never UserDefaults for secrets.' && echo '' && echo '   See: ios-auth-keychain-storage skill' && exit 2; fi; exit 0",
             "description": "Block UserDefaults storage of tokens/passwords/secrets — use Keychain"
+          },
+          {
+            "type": "command",
+            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; if grep -A 20 'NavigationLink(value:' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null | grep -q 'buttonStyle(.plain)'; then echo '🚫 .buttonStyle(.plain) inside NavigationLink detected.' && echo '' && echo '   💡 Fix: Use .buttonStyle(.borderless) inside NavigationLink. .plain only strips styling; .borderless claims tap ownership so the NavigationLink fires correctly.' && echo '' && echo '   See: swiftui-navigation-foundations skill' && exit 2; fi; exit 0",
+            "description": "Block .buttonStyle(.plain) inside NavigationLink — use .borderless"
           }
         ]
       }
