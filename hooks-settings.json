@@ -27,6 +27,16 @@
             "description": "Pre-archive validator — runs validate_pre_archive.sh before xcodebuild archive"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; CACHE=\"$(pwd)/.ios-from-web-guide-project.json\"; if [ \"$EXT\" = \"swift\" ] || [ \"$EXT\" = \"plist\" ] || [ \"$(basename \"$CLAUDE_HOOK_FILE_PATH\")\" = \"project.yml\" ]; then if [ -f \"$CACHE\" ]; then IS_IOS=$(grep -o '\"is_ios_project\":\\s*[a-z]*' \"$CACHE\" | grep -o '[a-z]*$'); [ \"$IS_IOS\" = \"false\" ] && exit 0; fi; echo '💡 Reminder: Did you invoke the relevant ios-from-web-guide skill before writing this file? If not, invoke it now and verify your code follows the rules.'; fi; exit 0",
+            "description": "Remind about skill invocation for iOS files (context-aware)"
+          }
+        ]
       }
     ],
     "PostToolUse": [],
