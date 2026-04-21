@@ -60,6 +60,11 @@
             "type": "command",
             "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; CACHE=\"$(pwd)/.ios-from-web-guide-project.json\"; [ -f \"$CACHE\" ] || exit 0; TARGET=$(grep -o '\"deployment_target\":\\s*\"[^\"]*\"' \"$CACHE\" | sed -E 's/.*\"([0-9.]+)\".*/\\1/'); MAJOR=$(echo \"$TARGET\" | cut -d. -f1); [ -z \"$MAJOR\" ] && exit 0; if [ \"$MAJOR\" -lt 17 ] 2>/dev/null; then exit 0; fi; if grep -qE '@Published|@ObservedObject|@StateObject' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null; then echo '⚠️  @Published/@ObservedObject/@StateObject on iOS 17+ — prefer @Observable.' && echo '' && echo '   💡 Fix: Use @Observable (Swift Observation framework). iOS 17+ makes the old ObservableObject pattern obsolete.' && echo '' && echo '   See: swiftui-observable-viewmodel-boilerplate skill' && exit 1; fi; exit 0",
             "description": "Warn on @Published/@ObservedObject/@StateObject in iOS 17+ Observable projects"
+          },
+          {
+            "type": "command",
+            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; if echo \"$CLAUDE_HOOK_FILE_PATH\" | grep -qE '_test\\.swift$|/Tests/|/SnapshotTests/'; then exit 0; fi; if grep -qE '^\\s*print\\(' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null; then echo '⚠️  print() call outside test files — shouldnt ship.' && echo '' && echo '   💡 Fix: Replace print() with os.Logger for production logging.' && echo '' && echo '     import os' && echo '     let logger = Logger(subsystem: \"com.example.app\", category: \"feature\")' && echo '     logger.info(\"message\")' && exit 1; fi; exit 0",
+            "description": "Warn on print() outside test files — use os.Logger"
           }
         ]
       }
