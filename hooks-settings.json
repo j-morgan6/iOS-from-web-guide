@@ -1,6 +1,17 @@
 {
   "hooks": {
-    "SessionStart": [],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SCRIPTS_DIR=\"$HOME/.claude/scripts/ios-from-web-guide\"; if [ -f \"$SCRIPTS_DIR/detect_project.sh\" ]; then bash \"$SCRIPTS_DIR/detect_project.sh\" 2>/dev/null; fi; exit 0",
+            "description": "Detect iOS project and cache metadata for context-aware hooks"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [],
     "PostToolUse": [],
     "SubagentStart": []
