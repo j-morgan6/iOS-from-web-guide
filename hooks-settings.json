@@ -35,6 +35,11 @@
             "type": "command",
             "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; CACHE=\"$(pwd)/.ios-from-web-guide-project.json\"; if [ \"$EXT\" = \"swift\" ] || [ \"$EXT\" = \"plist\" ] || [ \"$(basename \"$CLAUDE_HOOK_FILE_PATH\")\" = \"project.yml\" ]; then if [ -f \"$CACHE\" ]; then IS_IOS=$(grep -o '\"is_ios_project\":\\s*[a-z]*' \"$CACHE\" | grep -o '[a-z]*$'); [ \"$IS_IOS\" = \"false\" ] && exit 0; fi; echo '💡 Reminder: Did you invoke the relevant ios-from-web-guide skill before writing this file? If not, invoke it now and verify your code follows the rules.'; fi; exit 0",
             "description": "Remind about skill invocation for iOS files (context-aware)"
+          },
+          {
+            "type": "command",
+            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; if grep -qE 'UserDefaults.*\\b(token|password|secret|api_key|bearer)\\b' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null; then echo '🚫 Storing secrets in UserDefaults detected.' && echo '' && echo '   💡 Fix: Use KeychainService.save(token:) / .getToken() / .deleteToken(). Never UserDefaults for secrets.' && echo '' && echo '   See: ios-auth-keychain-storage skill' && exit 2; fi; exit 0",
+            "description": "Block UserDefaults storage of tokens/passwords/secrets — use Keychain"
           }
         ]
       }
