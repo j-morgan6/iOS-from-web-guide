@@ -55,6 +55,11 @@
             "type": "command",
             "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; COLLAPSED=$(tr '\\n' ' ' < \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null); if echo \"$COLLAPSED\" | grep -qE '@MainActor[^{]*(class|struct|actor)[^{]*\\{[^}]*DispatchQueue\\.main\\.async'; then echo '⚠️  DispatchQueue.main.async inside @MainActor is redundant.' && echo '' && echo '   💡 Fix: Remove it. All methods on @MainActor already run on the main actor.' && exit 1; fi; exit 0",
             "description": "Warn on DispatchQueue.main.async inside @MainActor class/struct"
+          },
+          {
+            "type": "command",
+            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; [ \"$EXT\" != \"swift\" ] && exit 0; CACHE=\"$(pwd)/.ios-from-web-guide-project.json\"; [ -f \"$CACHE\" ] || exit 0; TARGET=$(grep -o '\"deployment_target\":\\s*\"[^\"]*\"' \"$CACHE\" | sed -E 's/.*\"([0-9.]+)\".*/\\1/'); MAJOR=$(echo \"$TARGET\" | cut -d. -f1); [ -z \"$MAJOR\" ] && exit 0; if [ \"$MAJOR\" -lt 17 ] 2>/dev/null; then exit 0; fi; if grep -qE '@Published|@ObservedObject|@StateObject' \"$CLAUDE_HOOK_FILE_PATH\" 2>/dev/null; then echo '⚠️  @Published/@ObservedObject/@StateObject on iOS 17+ — prefer @Observable.' && echo '' && echo '   💡 Fix: Use @Observable (Swift Observation framework). iOS 17+ makes the old ObservableObject pattern obsolete.' && echo '' && echo '   See: swiftui-observable-viewmodel-boilerplate skill' && exit 1; fi; exit 0",
+            "description": "Warn on @Published/@ObservedObject/@StateObject in iOS 17+ Observable projects"
           }
         ]
       }
