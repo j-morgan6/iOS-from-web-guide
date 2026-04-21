@@ -1,0 +1,15 @@
+{
+  "name": "ios-from-web-guide",
+  "owner": {
+    "name": "Joseph Morgan",
+    "url": "https://github.com/j-morgan6"
+  },
+  "plugins": [
+    {
+      "name": "ios-from-web-guide",
+      "source": "./",
+      "description": "Enforce best practices and prevent common mistakes when adding a native iOS client to an existing web application. SwiftUI, iOS 17+, XcodeGen, App Store pipeline.",
+      "version": "1.0.0"
+    }
+  ]
+}
