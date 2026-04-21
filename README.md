@@ -46,18 +46,6 @@ cp ~/.claude/plugins/cache/ios-from-web-guide/ios-from-web-guide/*/CLAUDE.md.tem
 - **[CHANGELOG.md](CHANGELOG.md)** — release history.
 - **[CLAUDE.md.template](CLAUDE.md.template)** — drop-in project file that tells Claude which skills to invoke on which files.
 
-## Related plugin
-
-`elixir-phoenix-guide` — the sibling plugin for Elixir/Phoenix backends. Same structural pattern (skills + hooks + agents), different domain. You can run both installed simultaneously; they don't share skill namespaces or hook matchers.
-
-## Philosophy
-
-- **Every skill traces to a specific pitfall from a real shipped project.** No speculative skills.
-- **Block only what costs 30+ minutes to recover from.** Everything else warns or teaches.
-- **Negative examples are as valuable as positive ones.** Every skill states what NOT to do and why.
-- **Templates are the source of truth for code.** Skills reference templates; no drifting copies.
-- **Opinionated and honest.** One stack (SwiftUI + iOS 17+ + XcodeGen). No cross-platform framework support.
-
 ## License
 
 MIT. See [LICENSE](LICENSE).
