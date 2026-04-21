@@ -20,6 +20,11 @@
             "type": "command",
             "command": "INPUT=$(cat); if echo \"$INPUT\" | grep -qE 'git\\s+push.*(-f|--force).*(main|master)'; then echo '🚫 Dangerous: force push to main/master rewrites shared history. Use --force-with-lease on a feature branch or push to a new branch.' && exit 2; fi; if echo \"$INPUT\" | grep -qE 'xcrun\\s+simctl\\s+erase\\s+all'; then echo '⚠️  xcrun simctl erase all wipes ALL simulator state. Prefer erase <device-id> for a single device.' && exit 1; fi; exit 0",
             "description": "Block dangerous Bash operations (force push to main, simctl erase all)"
+          },
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); if echo \"$INPUT\" | grep -qE 'xcodebuild\\s+.*archive'; then SCRIPT=\"$HOME/.claude/scripts/ios-from-web-guide/validate_pre_archive.sh\"; if [ -f \"$SCRIPT\" ]; then bash \"$SCRIPT\"; exit $?; fi; fi; exit 0",
+            "description": "Pre-archive validator — runs validate_pre_archive.sh before xcodebuild archive"
           }
         ]
       }
