@@ -74,7 +74,18 @@
         ]
       }
     ],
-    "PostToolUse": [],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "EXT=\"${CLAUDE_HOOK_FILE_PATH##*.}\"; if [ \"$EXT\" != \"swift\" ]; then exit 0; fi; if echo \"$CLAUDE_HOOK_FILE_PATH\" | grep -qE '/Views/'; then echo '💡 Consider running the swiftui-checklist agent on this file to catch common pitfalls (navigation, state, equality, layout).'; fi; exit 0",
+            "description": "Post-write: suggest dispatching swiftui-checklist agent on Views/ .swift files"
+          }
+        ]
+      }
+    ],
     "SubagentStart": []
   }
 }
