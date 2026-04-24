@@ -2,7 +2,7 @@
 
 Enforce iOS/SwiftUI best practices when adding a native iOS client to an existing web app.
 
-**12 skills · 13 hooks · 2 agents · 7 templates · 3 scripts**
+**12 skills · 13 hooks · 2 agents · 7 templates · 4 scripts**
 
 A Claude Code plugin. Targets SwiftUI, iOS 17+, XcodeGen, and the App Store release pipeline. Pairs enforced skills with `PreToolUse`/`PostToolUse`/`SessionStart`/`SubagentStart` hooks and opinionated templates so common mistakes are caught before they ship.
 
@@ -23,7 +23,7 @@ Plus a handful of "one-hour-to-recover" pitfalls: UserDefaults-for-tokens (block
 Install via Claude Code's plugin system:
 
 ```
-/plugin marketplace add j-morgan6/ios-from-web-guide
+/plugin marketplace add j-morgan6/iOS-from-web-guide
 /plugin install ios-from-web-guide@ios-from-web-guide
 ```
 
