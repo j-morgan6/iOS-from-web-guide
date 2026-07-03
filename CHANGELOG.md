@@ -1,5 +1,43 @@
 # Changelog
 
+## 1.1.0 — 2026-07-03
+
+### Fixed
+
+**Hook feedback never reached the model.** Claude Code feeds a hook's *stderr* to the model on exit code 2, and exit-1 "warnings" are shown to the user only. Every hook message was written to stdout, so blocking hooks blocked without explanation and all warning hooks were silent no-ops (the same failure class as 1.0.1). All findings now go to stderr, and warning checks moved from PreToolUse exit 1 (invisible) to PostToolUse exit 2 (fed back to the model after the write, without undoing it).
+
+**Edits were effectively unlintable.** Checks ran against the bare `new_string`, so an Edit introducing a violation into existing context (e.g. switching `.borderless` to `.plain` inside a NavigationLink already on disk) passed clean. PreToolUse checks now lint the *effective* post-edit content (on-disk file with the replacement applied); PostToolUse checks lint the final file on disk.
+
+**Pre-archive validator false-positived on the plugin's own canonical layout.** It only searched `./Info.plist` at the repo root, but the recommended structure nests it at `<AppName>/Info.plist` and `project.yml.template` inlines keys under `info.properties`. The validator now finds the plist anywhere in the tree and also accepts keys declared in `project.yml`.
+
+**Check regressions (all covered by the new test suite):**
+- Force-push guard: `git push origin main --force` (flag after branch) bypassed the block; `--force-with-lease` and branch names merely containing "master" were falsely blocked.
+- `userdefaults-token` missed camelCase `apiKey`; now case-insensitive over token/password/secret/api_key/apiKey/bearer/credential.
+- `navlink-plain` only matched `NavigationLink(value:`; now matches every NavigationLink form.
+- `url-relative` exempted every path starting with `/h` (stray `[^h]` in the regex).
+- `dispatchqueue-mainactor` only caught the first method of a type.
+- `print-outside-tests` flagged Swift-conventional `FooTests.swift` while exempting Go-style `_test.swift`.
+- `print()` detection missed mid-line calls (`func a() { print(...) }`).
+
+**Dark/tinted icon variants are no longer flagged for alpha.** Apple instructs a *transparent* background for the dark variant; the no-alpha rule (ITMS-90717) applies only to the primary icon. The validator now skips `*dark*`/`*tinted*` PNGs and the `ios-app-icon-asset-prep` skill documents the per-variant rules (primary: opaque RGB; dark: transparent; tinted: fully opaque grayscale encoded as RGB).
+
+**Swift 6 template fixes.** `APIClient` is now `@MainActor` (an unisolated `static let shared` holding non-Sendable JSONEncoder/JSONDecoder does not compile under strict concurrency), `KeychainService` is `Sendable` and derives its service name from `Bundle.main.bundleIdentifier` instead of a hardcoded plugin string, and `project.yml.template` gains `SWIFT_STRICT_CONCURRENCY: complete` and `xcodeVersion: "16.0"` (Swift 6 needs Xcode 16).
+
+### Changed
+
+- Hooks consolidated: one `bash-guard.sh` call for Bash and one `hook-lint.sh pre` / `post` call per Write/Edit (was 8 separate PreToolUse invocations, each spawning its own python3).
+- `xcrun simctl erase all` now asks for explicit user confirmation (JSON `permissionDecision: "ask"`) instead of an invisible warning.
+- `detect_project.sh` writes its cache only when the directory is actually an iOS project (no more junk files in every repo) and announces detection into session context.
+- The always-on "did you invoke the skill?" reminder hook was removed — it fired on every write regardless of content; the skill→file mapping lives in `CLAUDE.md.template`, and real findings now actually reach the model.
+- Skill frontmatter cleaned up: removed unsupported `file_patterns`/`auto_suggest` fields; trigger conditions folded into `description`.
+- Prose hook IDs (H-W-2…H-W-8) replaced with check names; dangling `swiftui-cross-view-state-sync` references removed.
+
+### Added
+
+- `tests/run-tests.sh` — 33-test suite over all scripts (the 1.0.1 bug and this release's stdout bug are both the "silent no-op" class a smoke test catches).
+- GitHub Actions CI: test suite on macOS + Linux, shellcheck, JSON validation.
+- `templates/APIClientProtocol.swift` and `templates/MockAPIClient.swift` — the injection seam and test double that `ios-feature-scaffold`'s generated ViewModel/tests referenced but nothing provided.
+
 ## 1.0.1 — 2026-04-21
 
 ### Fixed
