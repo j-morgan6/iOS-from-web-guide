@@ -7,7 +7,7 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/detect_project.sh\" 2>/dev/null; exit 0",
-            "description": "Detect iOS project and cache metadata for context-aware hooks"
+            "description": "Detect iOS project, cache metadata for context-aware hooks, announce plugin activation"
           }
         ]
       }
@@ -18,13 +18,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=$(cat); CMD=$(printf '%s' \"$INPUT\" | python3 -c 'import json,sys; d=json.loads(sys.stdin.read()); print(d.get(\"tool_input\",{}).get(\"command\",\"\"))' 2>/dev/null); if echo \"$CMD\" | grep -qE 'git[[:space:]]+push.*(-f|--force).*(main|master)'; then echo '🚫 Dangerous: force push to main/master rewrites shared history. Use --force-with-lease on a feature branch or push to a new branch.' && exit 2; fi; if echo \"$CMD\" | grep -qE 'xcrun[[:space:]]+simctl[[:space:]]+erase[[:space:]]+all'; then echo '⚠️  xcrun simctl erase all wipes ALL simulator state. Prefer erase <device-id> for a single device.' && exit 1; fi; exit 0",
-            "description": "Block dangerous Bash operations (force push to main, simctl erase all)"
-          },
-          {
-            "type": "command",
-            "command": "INPUT=$(cat); CMD=$(printf '%s' \"$INPUT\" | python3 -c 'import json,sys; d=json.loads(sys.stdin.read()); print(d.get(\"tool_input\",{}).get(\"command\",\"\"))' 2>/dev/null); if echo \"$CMD\" | grep -qE 'xcodebuild[[:space:]]+.*archive'; then bash \"${CLAUDE_PLUGIN_ROOT}/scripts/validate_pre_archive.sh\"; exit $?; fi; exit 0",
-            "description": "Pre-archive validator — runs validate_pre_archive.sh before xcodebuild archive"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/bash-guard.sh\"",
+            "description": "Guard Bash: block force-push to main/master, confirm simctl erase all, validate before xcodebuild archive"
           }
         ]
       },
@@ -33,43 +28,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" skill-reminder",
-            "description": "Remind about skill invocation for iOS files (context-aware)"
-          },
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" userdefaults-token",
-            "description": "Block UserDefaults storage of tokens/passwords/secrets — use Keychain"
-          },
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" navlink-plain",
-            "description": "Block .buttonStyle(.plain) inside NavigationLink — use .borderless"
-          },
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" url-relative",
-            "description": "Warn on URL(string:) with relative path — use .asBackendURL"
-          },
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" dispatchqueue-mainactor",
-            "description": "Warn on DispatchQueue.main.async inside @MainActor class/struct"
-          },
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" published-on-ios17",
-            "description": "Warn on @Published/@ObservedObject/@StateObject in iOS 17+ Observable projects"
-          },
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" print-outside-tests",
-            "description": "Warn on print() outside test files — use os.Logger"
-          },
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" hashable-id-eq",
-            "description": "Warn on custom id-only == on Hashable struct (breaks SwiftUI diffing)"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" pre",
+            "description": "Blocking checks on the effective post-edit content: UserDefaults secrets, .plain inside NavigationLink"
           }
         ]
       }
@@ -80,8 +40,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" post-write-views",
-            "description": "Post-write: suggest dispatching swiftui-checklist agent on Views/ .swift files"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-lint.sh\" post",
+            "description": "Warning checks on the written file: relative URL(string:), DispatchQueue in @MainActor, @Published on iOS 17+, print() outside tests, id-only == on Hashable, Views/ checklist suggestion"
           }
         ]
       }
@@ -92,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "printf '%s\\n' '## iOS From Web Guide — Rules for Subagents\n\nYou are working in an iOS/SwiftUI project. Follow these rules strictly.\n\n### SwiftUI Navigation\n1. Use `.buttonStyle(.borderless)` on Buttons inside a NavigationLink, never `.plain`\n2. Hoist `navigationDestination(for:)` to the root view that owns the NavigationStack\n3. Prefer `NavigationLink(value:)` + `navigationDestination(for:)` over `NavigationLink(destination:)` (deprecated)\n\n### State Management\n1. Use `@Observable` (iOS 17+). Never `@Published`/`@ObservedObject`/`@StateObject`\n2. Let Swift auto-synthesize Hashable. Never write a custom id-only `==` on a model struct\n3. In Views, use `@State private var viewModel = FooViewModel()` for Observable classes\n\n### API / Auth\n1. Store tokens in Keychain (KeychainService). Never UserDefaults\n2. Use snake_case on the wire — `.convertToSnakeCase` / `.convertFromSnakeCase` on JSONEncoder/Decoder\n3. Always resolve relative paths via `.asBackendURL` — never `URL(string: relativePath)`\n4. APIClient handles base URL internally; call sites pass relative paths\n\n### Shipping\n1. `CURRENT_PROJECT_VERSION` must strictly increment between TestFlight uploads\n2. App icon must be RGB, no alpha channel\n3. Every import of PhotosUI/AVFoundation/CoreLocation/ATT requires its Usage Description in Info.plist\n4. Keep `DEVELOPMENT_TEAM` in project.yml, not Xcode (XcodeGen wipes Xcode-only edits)\n\n### Layout\n1. Use `.containerRelativeFrame(.horizontal, alignment: .leading)` to pin width in ScrollView. `.frame(maxWidth: .infinity)` accepts infinity but does not cap'; exit 0",
+            "command": "printf '%s\\n' '## iOS From Web Guide — Rules for Subagents\n\nYou are working in an iOS/SwiftUI project. Follow these rules strictly.\n\n### SwiftUI Navigation\n1. Use `.buttonStyle(.borderless)` on Buttons inside a NavigationLink, never `.plain`\n2. Hoist `navigationDestination(for:)` to the root view that owns the NavigationStack\n3. Prefer `NavigationLink(value:)` + `navigationDestination(for:)` over `NavigationLink(destination:)` (deprecated)\n\n### State Management\n1. Use `@Observable` (iOS 17+). Never `@Published`/`@ObservedObject`/`@StateObject`\n2. Let Swift auto-synthesize Hashable. Never write a custom id-only `==` on a model struct\n3. In Views, use `@State private var viewModel = FooViewModel()` for Observable classes\n\n### API / Auth\n1. Store tokens in Keychain (KeychainService). Never UserDefaults\n2. Use snake_case on the wire — `.convertToSnakeCase` / `.convertFromSnakeCase` on JSONEncoder/Decoder\n3. Always resolve relative paths via `.asBackendURL` — never `URL(string: relativePath)`\n4. APIClient handles base URL internally; call sites pass relative paths\n\n### Shipping\n1. `CURRENT_PROJECT_VERSION` must strictly increment between TestFlight uploads\n2. The primary app icon must be RGB, no alpha (dark variant: transparent background is expected; tinted: opaque grayscale)\n3. Every import of PhotosUI/AVFoundation/CoreLocation/ATT requires its Usage Description in Info.plist\n4. Keep `DEVELOPMENT_TEAM` in project.yml, not Xcode (XcodeGen wipes Xcode-only edits)\n\n### Layout\n1. Use `.containerRelativeFrame(.horizontal, alignment: .leading)` to pin width in ScrollView. `.frame(maxWidth: .infinity)` accepts infinity but does not cap'; exit 0",
             "description": "Inject iOS from Web Guide rules into every subagent"
           }
         ]
