@@ -1,17 +1,13 @@
 ---
 name: ios-auth-keychain-storage
-description: MANDATORY for auth token storage. Invoke before writing any code that stores, reads, or deletes authentication credentials.
-file_patterns:
-  - "**/Services/**/*.swift"
-  - "**/Keychain*.swift"
-auto_suggest: true
+description: MANDATORY for auth token storage. Use before writing any code that stores, reads, or deletes authentication credentials.
 ---
 
 # iOS Auth & Keychain Storage
 
 ## RULES — Follow these with no exceptions
 
-1. **Auth tokens go in Keychain. Never UserDefaults.** UserDefaults is unencrypted plist-on-disk — a device compromise exposes every token. This rule is enforced by hook H-W-2.
+1. **Auth tokens go in Keychain. Never UserDefaults.** UserDefaults is unencrypted plist-on-disk — a device compromise exposes every token. This rule is enforced by the blocking `userdefaults-token` hook.
 2. **Use `kSecClassGenericPassword`** with a fixed `kSecAttrAccount` value (e.g. `"auth_token"`). One token per account name.
 3. **Set `kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlock`** — the token is readable when the app is backgrounded, but not before first unlock after reboot. Required for background refresh to work.
 4. **Provide exactly three public methods:** `save(token:)`, `getToken() -> String?`, `deleteToken()`. No variants, no convenience overloads.
@@ -108,14 +104,14 @@ func logout() {
 
 ### Using UserDefaults "just to get things working"
 
-**Anti-pattern (enforced by hook H-W-2):**
+**Anti-pattern (blocked by the `userdefaults-token` hook):**
 
 ```swift
 // ❌ NEVER
 UserDefaults.standard.set(token, forKey: "auth_token")
 ```
 
-**Fix:** `KeychainService.shared.save(token:)`. There is no scenario where UserDefaults for a token is correct. Hook H-W-2 blocks commits that contain `UserDefaults` writes keyed by `token`, `password`, `secret`, or `apiKey`.
+**Fix:** `KeychainService.shared.save(token:)`. There is no scenario where UserDefaults for a token is correct. The `userdefaults-token` hook rejects any Write/Edit that stores `token`, `password`, `secret`, `apiKey`, `bearer`, or `credential` values in UserDefaults.
 
 ### Using `kSecAttrAccessibleAlways` or `WhenUnlocked`
 

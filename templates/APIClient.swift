@@ -17,7 +17,11 @@ enum APIError: Error {
 
 // MARK: - Client
 
-final class APIClient {
+// @MainActor keeps the client Swift-6-safe (JSONEncoder/JSONDecoder are not
+// Sendable, so an unisolated `static let shared` would not compile under
+// strict concurrency). Network I/O still leaves the main actor at the await.
+@MainActor
+final class APIClient: APIClientProtocol {
     static let shared = APIClient()
     private let session: URLSession
     private let decoder: JSONDecoder
@@ -107,7 +111,7 @@ final class APIClient {
             throw APIError.httpError(-1, data)
         }
         if http.statusCode == 401 {
-            await AppState.shared.handleUnauthorized()
+            AppState.shared.handleUnauthorized()
             throw APIError.unauthorized
         }
         guard (200..<300).contains(http.statusCode) else {

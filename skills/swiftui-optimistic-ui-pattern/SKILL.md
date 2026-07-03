@@ -1,10 +1,6 @@
 ---
 name: swiftui-optimistic-ui-pattern
-description: MANDATORY for any like, bookmark, follow, favorite, or similar toggle. Invoke before writing a mutation method on a ViewModel.
-file_patterns:
-  - "**/ViewModels/**/*.swift"
-  - "**/Views/**/*.swift"
-auto_suggest: true
+description: MANDATORY for any like, bookmark, follow, favorite, or similar toggle. Use before writing a mutation method on a ViewModel.
 ---
 
 # SwiftUI Optimistic UI Pattern
@@ -15,7 +11,7 @@ auto_suggest: true
 2. **The API call is fire-and-forget** via `Task { _ = try? await APIClient.shared.post(...) as EmptyResponse }`. The return value is discarded because the UI already reflects the desired state.
 3. **Guard against negatives with `max(0, ...)`.** Like count, comment count, follower count — all must be floored at zero. A race or stale state can otherwise produce `-1` likes.
 4. **For MVP / beta: do not revert on failure.** The optimistic state stays even if the server rejects. A silent reconcile-on-next-fetch is acceptable. Revert-on-failure is a polish item, not a launch blocker. Document the decision in code or the PR.
-5. **Cross-view propagation** (same post displayed in feed + detail) is a separate concern handled by `swiftui-cross-view-state-sync` (Track B 1.3). Ignore cross-view for now.
+5. **Cross-view propagation** (same post displayed in feed + detail) is a separate concern — out of scope for this skill. For MVP, reconcile on the next fetch of each screen.
 
 ---
 
@@ -160,7 +156,6 @@ isLikePending[post.id] = true
 defer { isLikePending[post.id] = false }
 ```
 
-Track B / 1.3 skill covers this more thoroughly.
 
 ## Template reference
 
@@ -171,4 +166,3 @@ No dedicated template — this is a ViewModel pattern. `ios-feature-scaffold` dr
 - `swiftui-observable-viewmodel-boilerplate` — shape of the ViewModel.
 - `swiftui-equatable-hashable-for-diffing` — why structural equality on the model is required for re-renders.
 - `ios-api-client-foundation` — the `APIClient.shared.post/delete` calls.
-- `swiftui-cross-view-state-sync` (Track B 1.3) — for propagating the mutation to other views.

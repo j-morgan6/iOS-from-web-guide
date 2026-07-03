@@ -1,9 +1,6 @@
 ---
 name: ios-app-icon-asset-prep
-description: MANDATORY when adding or updating the app icon. Invoke before placing a PNG in AppIcon.appiconset/. Enforces 1024x1024 RGB-only (no alpha) — alpha causes App Store rejection.
-file_patterns:
-  - "**/AppIcon.appiconset/**"
-auto_suggest: true
+description: MANDATORY when adding or updating icons in AppIcon.appiconset/. Enforces 1024x1024 sizing and the per-variant alpha rules (primary opaque, dark transparent, tinted opaque grayscale).
 ---
 
 # iOS App Icon Asset Prep
@@ -11,11 +8,11 @@ auto_suggest: true
 ## RULES — Follow these with no exceptions
 
 1. **The icon must be exactly 1024x1024 px.** Not 1023, not 1025, not 1024x1200 cropped. App Store Connect rejects uploads with dimensions off by a single pixel.
-2. **No alpha channel.** RGB only. An alpha channel — even fully opaque — triggers "Invalid Icon: contains an alpha channel or transparencies" on upload and `xcodebuild archive` fails the IPA validation step.
-3. **Flatten onto a solid background before saving.** A transparent-looking-opaque PNG still carries an alpha channel. Use `scripts/strip-alpha-from-icon.sh` — it flattens via ImageMagick (lossless) with an sips JPEG round-trip fallback.
-4. **Provide both light and dark variants** in `Contents.json` using `appearances: [{ appearance: luminosity, value: dark }]`. Dark mode is required for a polished iOS 17+ app.
+2. **No alpha channel on the primary (light) icon.** RGB only — it doubles as the App Store marketing icon, and an alpha channel (even fully opaque) triggers ITMS-90717 "Invalid App Store Icon" on upload. This rule applies ONLY to the primary icon: the dark variant is *supposed* to have a transparent background, and the tinted variant should be opaque grayscale.
+3. **Flatten the primary icon onto a solid background before saving.** A transparent-looking-opaque PNG still carries an alpha channel. Use `scripts/strip-alpha-from-icon.sh` — it flattens via ImageMagick (lossless) with an sips JPEG round-trip fallback. Do NOT flatten the dark variant.
+4. **Provide both light and dark variants** in `Contents.json` using `appearances: [{ appearance: luminosity, value: dark }]`. Dark mode is required for a polished iOS 17+ app. Per Apple's docs, give the dark icon a **transparent background** so the system-provided dark background shows through.
 5. **No text, no tagline, no version number.** Apple's icon guidelines reject icons with more than a logomark. Save the text for the Marketing Screenshot.
-6. **The pre-archive validator blocks archive if an alpha channel is detected** on any PNG under `AppIcon.appiconset/`.
+6. **The pre-archive validator blocks archive if an alpha channel is detected** on primary icons under `AppIcon.appiconset/` (files named `*dark*` / `*tinted*` are exempt).
 
 ---
 
@@ -35,7 +32,7 @@ ERROR ITMS-90717: "Invalid App Store Icon. The App Store Icon in the asset catal
 in 'YourApp.app' can't be transparent or contain an alpha channel."
 ```
 
-This happens because iOS asset catalogs were designed for UI images (which often *want* alpha), but the App Store binary-checker singles out the 1024×1024 marketing icon and demands opaque RGB.
+This happens because iOS asset catalogs were designed for UI images (which often *want* alpha), but the App Store binary-checker singles out the 1024×1024 marketing icon — i.e. the primary/light variant — and demands opaque RGB.
 
 **Detect:**
 
@@ -89,7 +86,7 @@ iOS 17+ supports a dark-mode icon variant that kicks in when the user has Dark M
 
 See `<plugin-root>/templates/AppIcon-Contents.json.template` — drop into `Assets.xcassets/AppIcon.appiconset/Contents.json` verbatim and supply the two PNGs (`icon-1024.png` for light, `icon-1024-dark.png` for dark).
 
-Both variants must independently pass the 1024×1024 / RGB / no-alpha rules.
+Both variants must be 1024×1024 sRGB PNGs. The no-alpha rule applies **only to the light icon** — the dark variant keeps its transparent background (Apple: "Provide your dark app icon with a transparent background so the system-provided background can show through").
 
 ## Tinted variant (iOS 18+, optional)
 
@@ -108,15 +105,15 @@ iOS 18 added a *tinted* appearance — the system recolors the icon to match the
 ```
 
 **Tinted icon rules:**
-- Grayscale only; the system applies the tint.
+- Grayscale only; the system supplies the background and applies the tint.
+- Fully opaque, and **encoded as RGB with grayscale values** — a Gray Gamma colorspace PNG triggers an App Store Connect icon-display bug. Keep all variants the same format (PNG).
 - High-contrast — thin line work gets lost.
-- Same 1024×1024 / RGB / no-alpha constraints apply (even though it's grayscale, it's still saved as RGB-grayscale).
 
 This variant is optional. If omitted, iOS auto-generates a tinted version from the light variant, which usually looks worse than a hand-crafted one.
 
 ## Pre-archive validator enforcement
 
-`scripts/validate_pre_archive.sh` Check 3 walks every PNG under `AppIcon.appiconset/` and runs:
+`scripts/validate_pre_archive.sh` Check 3 walks the PNGs under `AppIcon.appiconset/` — skipping `*dark*` / `*tinted*` filenames, which are allowed (dark) or not required (tinted) to carry alpha — and runs:
 
 ```bash
 sips -g hasAlpha "$icon" | grep -q "hasAlpha: yes"
@@ -164,7 +161,7 @@ Cause: `Contents.json` has the wrong appearance key, or the PNG was swapped but 
 
 Cause: exported from color art and the contrast collapses under tint.
 
-**Fix:** re-export as high-contrast grayscale. The tinted variant should be ink-on-transparent-thinking — but flattened to opaque white background to satisfy the no-alpha rule. The system does the tinting at runtime.
+**Fix:** re-export as high-contrast, fully opaque grayscale (encoded as RGB). The system supplies the background and does the tinting at runtime.
 
 ## Template reference
 

@@ -1,9 +1,6 @@
 ---
 name: swiftui-layout-pitfalls
-description: MANDATORY for any view combining ScrollView, VStack, AsyncImage, or a custom Layout. Invoke before writing a ScrollView-based screen.
-file_patterns:
-  - "**/Views/**/*.swift"
-auto_suggest: true
+description: MANDATORY for any view combining ScrollView, VStack, AsyncImage, or a custom Layout. Use before writing a ScrollView-based screen under Views/.
 ---
 
 # SwiftUI Layout Pitfalls

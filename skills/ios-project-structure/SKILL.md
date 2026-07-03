@@ -1,10 +1,6 @@
 ---
 name: ios-project-structure
-description: MANDATORY for iOS project initialization and project.yml work. Invoke before creating or editing project.yml, Package.swift, or the top-level directory layout.
-file_patterns:
-  - "**/project.yml"
-  - "**/Package.swift"
-auto_suggest: true
+description: MANDATORY for iOS project initialization and project.yml work. Use before creating or editing project.yml, Package.swift, or the top-level directory layout.
 ---
 
 # iOS Project Structure
@@ -117,6 +113,9 @@ build/
 
 # macOS
 .DS_Store
+
+# ios-from-web-guide session cache
+.ios-from-web-guide-project.json
 ```
 
 ## Common pitfalls
@@ -147,10 +146,10 @@ build/
 
 ## Integration with the pre-archive validator
 
-The `ios-pre-archive-validator` hook reads `project.yml` directly to check:
+The pre-archive validator (`scripts/validate_pre_archive.sh`) reads `project.yml` directly to check:
 - `DEVELOPMENT_TEAM` is non-empty
-- `CURRENT_PROJECT_VERSION` was bumped
-- `TARGETED_DEVICE_FAMILY` matches supported orientations
+- `CURRENT_PROJECT_VERSION` is strictly greater than the last uploaded build (tracked in `.build-history`)
+- Privacy usage strings and `ITSAppUsesNonExemptEncryption` are declared (in a standalone `Info.plist` or inline under `info.properties`)
 
 Keeping this file as the source of truth is what lets the validator work.
 

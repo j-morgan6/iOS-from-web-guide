@@ -1,9 +1,6 @@
 ---
 name: swiftui-async-image-with-backend-paths
-description: MANDATORY for any AsyncImage rendering a URL from a JSON response. Invoke before writing AsyncImage(url:) anywhere in the View layer.
-file_patterns:
-  - "**/Views/**/*.swift"
-auto_suggest: true
+description: MANDATORY for any AsyncImage rendering a URL from a JSON response. Use before writing AsyncImage(url:) anywhere in the View layer.
 ---
 
 # SwiftUI `AsyncImage` with Backend Paths
@@ -14,7 +11,7 @@ auto_suggest: true
 2. **Create `Extensions/String+BackendURL.swift` on day 1.** Before the first `AsyncImage`. Before the first feature. It's a 10-line extension that prevents 5 duplicate `fullURL(_:)` helpers from growing across the codebase.
 3. **Always frame `AsyncImage` explicitly** — `.frame(maxWidth: .infinity).frame(height: X)` or `.aspectRatio(_:, contentMode:).frame(height: X).clipped()`. Otherwise the natural image size bleeds up through the parent VStack (see `swiftui-layout-pitfalls`).
 4. **Use the three-argument form with a placeholder.** `AsyncImage(url:) { image in ... } placeholder: { Color.gray.opacity(0.15) }` — so the frame is visually occupied during load.
-5. **Never write a per-view `fullURL(_:)` helper.** Use `.asBackendURL`. This rule is enforced by hook H-W-4.
+5. **Never write a per-view `fullURL(_:)` helper.** Use `.asBackendURL`. Relative `URL(string: "/...")` literals are flagged by the `url-relative` hook after every write.
 
 ---
 
@@ -113,9 +110,9 @@ The simulator and device run identical code. The backend just happens to return 
 
 That's the exact behavior `.asBackendURL` prevents. If you see this symptom anywhere, grep for `URL(string:` and replace with `.asBackendURL`.
 
-### Hook H-W-4 flags a bare `URL(string:)` in a View file
+### The `url-relative` hook flags a bare `URL(string: "/...")`
 
-This is the enforcement path. The hook scans files under `Views/` and flags `URL(string:` calls that don't go through `.asBackendURL`. Fix by adopting the extension.
+This is the enforcement path. The hook flags relative-path `URL(string:)` literals in any Swift file after the write. Fix by adopting the extension.
 
 ### The image loads on first render, vanishes on scroll-back
 

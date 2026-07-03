@@ -1,8 +1,6 @@
 ---
 name: ios-feature-scaffold
-description: MANDATORY when the user asks to "add a new feature" or similar. Chains API client, ViewModel, and View scaffolding in one pass. User-invoked, not file-pattern-triggered.
-file_patterns: []
-auto_suggest: true
+description: MANDATORY when the user asks to add or scaffold a new feature or screen. Chains Model + ViewModel + View + APIClient extension + test stub in one pass.
 ---
 
 # iOS Feature Scaffold
@@ -23,7 +21,7 @@ auto_suggest: true
 - User types or says: "add a new feature called X", "scaffold a Bookmarks feature", "create the Explore screen".
 - You're about to create `Views/X/XView.swift` and realize you also need Model + ViewModel + APIClient extension.
 
-This is a **user-invoked** skill (empty `file_patterns`). It's the highest-level orchestration skill — it chains every Track A pattern.
+This is a **user-invoked** skill — it triggers on the request, not on a file path. It's the highest-level orchestration skill: it chains every Track A pattern.
 
 ## The generated shape (example: `Bookmarks` feature)
 
@@ -222,6 +220,8 @@ Regression to iOS-16-era patterns. Always `@State` for `@Observable` classes.
 No single template — this skill composes the Track A templates and patterns. The generated files follow:
 
 - `templates/APIClient.swift` for the client layer.
+- `templates/APIClientProtocol.swift` — the injection seam the generated ViewModel depends on.
+- `templates/MockAPIClient.swift` — drop into `YourAppTests/` so the generated test stub compiles and passes immediately.
 - `templates/project.yml.template` for where files are rooted in the source tree.
 
 ## Related skills

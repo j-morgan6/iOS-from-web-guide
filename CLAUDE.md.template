@@ -16,7 +16,7 @@ If you think a rule here is wrong for a specific case, say so explicitly and wai
 
 ## 2. MANDATORY skill rules
 
-Before writing any `.swift`, `Info.plist`, `project.yml`, or `AppIcon.appiconset/**` file, verify that you have invoked the relevant `ios-from-web-guide` skill. The reminder hook will nudge you (e.g. "writing to `Views/Feed/FeedView.swift` — did you invoke `swiftui-layout-pitfalls`?"). **Respond to the nudge** — invoke the skill, read the rules, then write the code.
+Before writing any `.swift`, `Info.plist`, `project.yml`, or `AppIcon.appiconset/**` file, invoke the relevant `ios-from-web-guide` skill first. The plugin's hooks enforce after the fact — blocking violations (UserDefaults secrets, `.plain` inside NavigationLink) reject the write outright, and warning checks (relative `URL(string:)`, `@Published` on iOS 17+, `print()`, id-only `==`) report back right after the write. Don't code toward hook feedback: invoke the skill, read the rules, then write the code.
 
 Skills are not optional. They encode lessons from shipped apps and are the cheapest way to avoid a rewrite.
 
@@ -53,6 +53,8 @@ IOS_FROM_WEB_SKIP_VALIDATOR=1 xcodebuild archive ...
 
 When you use this, include a commit-message note explaining *why*. The escape hatch exists for edge cases, not to avoid fixing the underlying issue.
 
+Housekeeping: the SessionStart hook caches project metadata in `.ios-from-web-guide-project.json` — add that filename to your `.gitignore`.
+
 ## 4. Anti-pattern summary (top 10)
 
 Condensed from the hooks + skills. Each line: the smell → the fix.
@@ -64,8 +66,8 @@ Condensed from the hooks + skills. Each line: the smell → the fix.
 5. `VStack(alignment: .leading)` as `ScrollView` root → add `.containerRelativeFrame(.horizontal, alignment: .leading)`.
 6. `.frame(maxWidth: .infinity)` as a "fill the screen" fix → it doesn't cap width; use `.containerRelativeFrame`.
 7. `NavigationLink(destination:)` deprecated initializer → `NavigationLink(value:)` + `.navigationDestination(for:)`.
-8. `.buttonStyle(.plain)` inside `NavigationLink` → use `.borderless` or omit entirely.
-9. `id`-only `==` / `hash(into:)` on a Hashable struct used in `ForEach` → include all fields SwiftUI should diff on, or derive from the `Codable` default.
+8. `.buttonStyle(.plain)` inside `NavigationLink` → use `.borderless` or omit entirely (with `.plain` the tap is silently eaten).
+9. `id`-only `==` / `hash(into:)` on a Hashable struct used in `ForEach` → delete the custom implementations and let Swift synthesize structural equality over all stored properties.
 10. `print()` outside test files → `os.Logger` with subsystem + category, or delete.
 
 ## 5. Project structure expectation

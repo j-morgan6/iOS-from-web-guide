@@ -1,17 +1,13 @@
 ---
 name: swiftui-observable-viewmodel-boilerplate
-description: MANDATORY for creating any ViewModel. Invoke before writing any file under ViewModels/ or any class whose name ends in ViewModel.
-file_patterns:
-  - "**/ViewModels/**/*.swift"
-  - "**/*ViewModel.swift"
-auto_suggest: true
+description: MANDATORY for creating any ViewModel. Use before writing any file under ViewModels/ or any class whose name ends in ViewModel.
 ---
 
 # SwiftUI `@Observable` ViewModel Boilerplate
 
 ## RULES — Follow these with no exceptions
 
-1. **Use `@Observable` (Swift Observation, iOS 17+).** Never `@ObservableObject` / `@Published` / `@StateObject` / `@ObservedObject`. This rule is enforced by hook H-W-6.
+1. **Use `@Observable` (Swift Observation, iOS 17+).** Never `@ObservableObject` / `@Published` / `@StateObject` / `@ObservedObject`. This rule is enforced by the `published-on-ios17` hook.
 2. **Every ViewModel is `@MainActor @Observable final class`.** `@MainActor` because views read it on the main thread; `final` because subclassing an Observable breaks tracking.
 3. **Views hold ViewModels via `@State`,** not `@StateObject` or `@ObservedObject`. `@State` is the correct property wrapper for `@Observable` reference types since iOS 17.
 4. **One ViewModel per screen.** A view doesn't share a ViewModel with its parent — if it needs parent data, pass values in the initializer.
@@ -62,6 +58,8 @@ final class FeedViewModel {
 }
 ```
 
+**Testability note:** when the ViewModel will be unit-tested, inject the API client behind a protocol instead of calling the singleton directly — `init(api: APIClientProtocol = APIClient.shared)`. See `ios-feature-scaffold` and the `templates/APIClientProtocol.swift` / `templates/MockAPIClient.swift` templates.
+
 ## The canonical View shape
 
 ```swift
@@ -94,7 +92,7 @@ Using `@StateObject` with `@Observable` **compiles but is wrong** — you get a 
 
 ### Mixing `@Published` and `@Observable`
 
-**Anti-pattern (enforced by hook H-W-6):**
+**Anti-pattern (flagged by the `published-on-ios17` hook):**
 
 ```swift
 // ❌ NEVER

@@ -3,9 +3,9 @@ import Security
 
 /// Stores the user's auth token in the iOS Keychain.
 /// Never use UserDefaults for tokens — values there are in plaintext in backups.
-final class KeychainService {
+final class KeychainService: Sendable {
     static let shared = KeychainService()
-    private let service = "ios-from-web-guide.auth"
+    private let service = Bundle.main.bundleIdentifier ?? "com.example.app"
     private let account = "auth_token"
 
     private init() {}

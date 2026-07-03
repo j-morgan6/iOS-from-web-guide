@@ -30,7 +30,7 @@ Return findings in the structured block at the bottom of this document. Do **not
 ### 1. `.plain` button style inside `NavigationLink`
 
 **Grep:** `NavigationLink` followed within 10 lines by `.buttonStyle(.plain)`.
-**Why wrong:** `.plain` disables the tap animation and the a11y role. SwiftUI treats the wrapped content as non-interactive in VoiceOver. Use `.borderless` (default) or nothing.
+**Why wrong:** with `.plain` the tap is silently eaten — the inner button doesn't fire and the NavigationLink doesn't push. Use `.borderless` (scopes the hit area to the button) or omit the style.
 **Owning skill:** `swiftui-navigation-foundations`.
 
 ### 2. `NavigationLink(destination:)` initializer
@@ -76,11 +76,11 @@ Also match `URL\(string:\s*post\.` or `URL\(string:\s*\w+\.imageURL\)` where the
 **Grep:** `DispatchQueue\.main\.async`.
 **Check context:** if the enclosing type or function is annotated `@MainActor` (grep the surrounding 30 lines).
 **Why wrong:** Under `@MainActor` you are *already* on the main actor — `DispatchQueue.main.async` is a no-op that also hides the suspension point from the compiler. Usually a sign the author is mixing async/await with old GCD habits.
-**Owning skill:** none. **Hook-only** anti-pattern — mention that hook H-W-5 warns on this; no dedicated skill teaches the fix because it's a one-line deletion.
+**Owning skill:** none. **Hook-only** anti-pattern — the `dispatchqueue-mainactor` post-write hook warns on this; no dedicated skill teaches the fix because it's a one-line deletion.
 
 ### 9. `UserDefaults` for auth tokens
 
-**Grep:** `UserDefaults\..*\b(token|password|secret|apiKey)\b`.
+**Grep:** `UserDefaults\..*\b(token|password|secret|api_?[kK]ey|bearer|credential)\b` (case-insensitive).
 **Why wrong:** UserDefaults is unencrypted plist. Tokens must go in Keychain via `KeychainService.shared.save(token:)`.
 **Owning skill:** `ios-auth-keychain-storage`.
 
@@ -88,7 +88,7 @@ Also match `URL\(string:\s*post\.` or `URL\(string:\s*\w+\.imageURL\)` where the
 
 **Grep:** `\bprint\(` in any file whose path does **not** contain `/Tests/` or end in `Tests.swift` / `Test.swift`.
 **Why wrong:** `print()` ships to production. Use `os.Logger` with a subsystem and category, or remove before commit.
-**Owning skill:** none. **Hook-only** — hook H-W-7 warns on this.
+**Owning skill:** none. **Hook-only** — the `print-outside-tests` post-write hook warns on this.
 
 ## How to run the checks efficiently
 

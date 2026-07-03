@@ -25,6 +25,8 @@ final class AppState {
     }
 }
 
+// Defined here only so this template is self-contained — in your project,
+// User belongs in Models/User.swift (see ios-project-structure).
 struct User: Codable, Hashable, Sendable {
     let id: Int
     let username: String

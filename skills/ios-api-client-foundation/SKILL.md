@@ -1,10 +1,6 @@
 ---
 name: ios-api-client-foundation
-description: MANDATORY for API client and Services work. Invoke before writing APIClient, any file under Services/, or any networking code.
-file_patterns:
-  - "**/Services/**/*.swift"
-  - "**/APIClient*.swift"
-auto_suggest: true
+description: MANDATORY for API client and Services work. Use before writing APIClient, any file under Services/, or any networking code.
 ---
 
 # iOS API Client Foundation
@@ -52,16 +48,19 @@ let post = response.data
 
 ```swift
 @MainActor
-final class APIClient {
+final class APIClient: APIClientProtocol {
     static let shared = APIClient()
 
     func get<T: Decodable>(path: String) async throws -> T
-    func post<T: Decodable>(path: String, body: Encodable? = nil) async throws -> T
-    func put<T: Decodable>(path: String, body: Encodable? = nil) async throws -> T
+    func post<T: Decodable, B: Encodable>(path: String, body: B) async throws -> T
+    func post<T: Decodable>(path: String) async throws -> T
+    func put<T: Decodable, B: Encodable>(path: String, body: B) async throws -> T
     func delete<T: Decodable>(path: String) async throws -> T
-    func upload(path: String, imageData: Data, filename: String) async throws -> DataResponse<UploadResult>
+    func upload<T: Decodable>(path: String, imageData: Data, filename: String, mimeType: String = "image/jpeg") async throws -> T
 }
 ```
+
+`APIClientProtocol` (see `templates/APIClientProtocol.swift`) is the seam ViewModels inject for testability; `templates/MockAPIClient.swift` is the matching test double.
 
 ## Adding an endpoint
 
@@ -133,7 +132,7 @@ if httpResponse.statusCode == 401 {
 
 **Symptom:** Tests hit the real network.
 
-**Fix:** `APIClient.shared` is the only instance. For tests, inject a protocol (`APIClientProtocol`) into view models and mock it.
+**Fix:** `APIClient.shared` is the only instance. For tests, inject `APIClientProtocol` into view models and use `MockAPIClient` (both provided as templates).
 
 ### Manual `Authorization` header in feature code
 

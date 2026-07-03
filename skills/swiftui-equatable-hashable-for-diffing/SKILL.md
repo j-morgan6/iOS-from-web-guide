@@ -1,9 +1,6 @@
 ---
 name: swiftui-equatable-hashable-for-diffing
-description: MANDATORY for model structs used in SwiftUI views, especially with NavigationLink(value:) or @Observable arrays. Invoke before writing custom Equatable or Hashable conformances on model types.
-file_patterns:
-  - "**/Models/**/*.swift"
-auto_suggest: true
+description: MANDATORY for model structs used in SwiftUI views (files under Models/), especially with NavigationLink(value:) or @Observable arrays. Use before writing custom Equatable or Hashable conformances.
 ---
 
 # SwiftUI Equatable/Hashable for Correct Diffing

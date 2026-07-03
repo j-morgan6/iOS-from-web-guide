@@ -1,9 +1,6 @@
 ---
 name: ios-info-plist-privacy-strings
-description: MANDATORY for Info.plist work. Invoke before adding imports that require user permission (PhotosUI, AVFoundation camera, CoreLocation, ATT, HealthKit, Contacts, EventKit).
-file_patterns:
-  - "**/Info.plist"
-auto_suggest: true
+description: MANDATORY for Info.plist work. Use before adding imports that require user permission (PhotosUI, AVFoundation camera, CoreLocation, ATT, HealthKit, Contacts, EventKit).
 ---
 
 # iOS Info.plist Privacy Strings
@@ -145,7 +142,7 @@ import[[:space:]]+CoreLocation      → NSLocationWhenInUseUsageDescription
 import[[:space:]]+AppTrackingTransparency → NSUserTrackingUsageDescription
 ```
 
-If any `.swift` file matches the import regex but `Info.plist` is missing the key, validation fails with exit code 2 and prints the key name to add. To bypass in rare legitimate cases:
+If any `.swift` file matches the import regex and the key is declared in neither the project's `Info.plist` (found anywhere in the tree) nor `project.yml`'s `info.properties`, validation fails with exit code 2 and prints the key name to add. To bypass in rare legitimate cases:
 
 ```bash
 IOS_FROM_WEB_SKIP_VALIDATOR=1 xcodebuild archive ...

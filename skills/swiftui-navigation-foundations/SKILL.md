@@ -1,10 +1,6 @@
 ---
 name: swiftui-navigation-foundations
-description: MANDATORY for any screen with navigation. Invoke before writing a NavigationStack, NavigationLink, or navigationDestination.
-file_patterns:
-  - "**/Views/**/*.swift"
-  - "**/MainView.swift"
-auto_suggest: true
+description: MANDATORY for any screen with navigation. Use before writing a NavigationStack, NavigationLink, or navigationDestination — typically files under Views/.
 ---
 
 # SwiftUI Navigation Foundations
@@ -14,7 +10,7 @@ auto_suggest: true
 1. **Use `NavigationStack` + `navigationDestination(for:)`** — iOS 16+ API. Never `NavigationView` (deprecated) or `NavigationLink(destination:)` (destination-first style is effectively deprecated too).
 2. **Prefer `NavigationLink(value:)`** with a typed value and a hoisted `navigationDestination(for: T.self)`. The value must be `Hashable`.
 3. **Hoist all `navigationDestination(for:)` modifiers to the root view that owns the `NavigationStack`.** Placing them inside lazy containers (`TabView(.page)`, `LazyVStack`, `LazyVGrid`) silently fails to register them.
-4. **For nested tap targets inside a `NavigationLink`, use `.buttonStyle(.borderless)` — NOT `.plain`.** `.borderless` claims tap ownership (so inner Buttons fire); `.plain` only removes visual styling and inner taps still bubble to the outer link. This rule is enforced by hook H-W-3.
+4. **For nested tap targets inside a `NavigationLink`, use `.buttonStyle(.borderless)` — NOT `.plain`.** With `.plain` the tap is silently eaten: the button doesn't fire and the link doesn't push. `.borderless` keeps the button's hit area scoped to the button, so it fires on its own bounds and the rest of the row still navigates. This rule is enforced by the blocking `navlink-plain` hook.
 5. **Programmatic navigation uses `NavigationPath`** bound via `NavigationStack(path: $router.path)`. Deep links / push-from-anywhere flows append to the path.
 6. **One `NavigationStack` per tab.** Don't nest NavigationStacks inside NavigationStacks — state behaves oddly.
 
@@ -79,16 +75,18 @@ NavigationLink(value: post) {
 Without any `buttonStyle`, the tap on "Like" bubbles up to the NavigationLink and pushes the detail view.
 
 ```swift
-// ❌ DOES NOT WORK — .plain removes styling but inner tap still bubbles
+// ❌ DOES NOT WORK — with .plain the tap is silently eaten:
+// the like action never fires and the link doesn't push
 Button("Like") { viewModel.toggleLike(post) }
     .buttonStyle(.plain)
 
-// ✅ WORKS — .borderless claims tap ownership
+// ✅ WORKS — .borderless scopes the hit area to the button:
+// "Like" fires on the button, the rest of the row still navigates
 Button("Like") { viewModel.toggleLike(post) }
     .buttonStyle(.borderless)
 ```
 
-This bit the Trays project. It compiles, it looks right, and it's wrong. Hook H-W-3 flags `.buttonStyle(.plain)` inside a `NavigationLink` subtree.
+This bit the Trays project. It compiles, it looks right, and it's wrong. The blocking `navlink-plain` hook flags `.buttonStyle(.plain)` inside a `NavigationLink` subtree.
 
 ## Programmatic navigation
 

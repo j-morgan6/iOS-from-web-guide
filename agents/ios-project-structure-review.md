@@ -74,6 +74,7 @@ Verify the project's `.gitignore` contains at least:
 - `DerivedData/`
 - `build/`
 - `.DS_Store`
+- `.ios-from-web-guide-project.json` (session cache written by this plugin)
 
 Missing entries are **warnings**.
 
